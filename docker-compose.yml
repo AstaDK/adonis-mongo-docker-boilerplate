@@ -1,0 +1,78 @@
+# Use version 3.7 of Docker Compose
+version: '3.7'
+
+# Define services
+services:
+  # Adonis API service
+  adonis-api:
+    # Use the Node.js 14.17.5 image
+    image: node:14.17.5
+    # Name the container 'adonis-api'
+    container_name: adonis-api
+    # Run the start.sh script
+    command: ./start.sh
+    # Set the working directory to /app
+    working_dir: /app
+    # Mount the current directory to /app in the container
+    volumes:
+      - .:/app
+    # Expose port 3003
+    ports:
+      - 3003:3003
+    # Depend on the adonis-db and adonis-redis services
+    depends_on:
+      - adonis-db
+      - adonis-redis
+
+  # Adonis DB service
+  adonis-db:
+    # Use the MariaDB 10.6 image
+    image: mariadb:10.6
+    # Name the container 'adonis-db'
+    container_name: adonis-db
+    # Use the .env file for environment variables
+    env_file:
+      - .env
+    # Set environment variables
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    # Expose port 3306
+    ports:
+      - 3303:3306
+    # Mount the db_data directory to /var/lib/mysql in the container
+    volumes:
+      - ./db_data:/var/lib/mysql
+
+  # Adonis Adminer service
+  adonis-adminer:
+    # Name the container 'adonis-adminer'
+    container_name: adonis-adminer
+    # Use the Adminer image
+    image: adminer
+    # Always restart the container
+    restart: always
+    # Expose port 8080
+    ports:
+      - 8083:8080
+    # Depend on the adonis-db service
+    depends_on:
+      - adonis-db
+    # http://localhost:8083/?server=adonis-db&username=adonis
+
+  # Adonis Redis service
+  adonis-redis:
+    # Name the container 'adonis-redis'
+    container_name: adonis-redis
+    # Use the Redis 6.2-alpine image
+    image: redis:6.2-alpine
+    # Expose port 6379
+    ports:
+      - 6373:6379
+
+# Define volumes
+volumes:
+  # Create a named volume for the adonis-db service
+  adonis-db:
